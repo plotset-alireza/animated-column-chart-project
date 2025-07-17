@@ -11,6 +11,11 @@
 </head>
 <body>
     <h1>Race Columns Demo</h1>
+    <div style="margin-bottom: 20px;">
+        <button id="playBtn">Play Animation</button>
+        <button id="stopBtn">Stop Animation</button>
+        <button id="resetBtn">Reset</button>
+    </div>
     <canvas id="chart" width="800" height="500"></canvas>
 
     <script type="module">
@@ -58,6 +63,20 @@
         });
         chart.init(data, ['value']);
         chart.draw();
+
+        // Add event listeners for controls
+        document.getElementById('playBtn').addEventListener('click', () => {
+            chart.play();
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            chart.stop();
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            chart.stop();
+            chart.goToFrame(0);
+        });
     </script>
 </body>
 </html>

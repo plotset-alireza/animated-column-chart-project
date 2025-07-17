@@ -95,15 +95,24 @@ export class RaceColumns {
     const marginRight =
       parseFloat(this.config?.raceColumn?.marginRight) || 0;
 
-    const availableWidth =
-      this.canvas.width - marginLeft - marginRight;
-    const availableHeight =
-      this.canvas.height - marginTop - marginBottom;
+    // Account for axis margins
+    const axisLeftMargin = 60; // Space for y-axis labels
+    const axisBottomMargin = 30; // Space for x-axis labels
 
-    this.columnWidth =
-      (availableWidth - (this.columnCount - 1) * this.columnGap) /
-      this.columnCount;
+    const availableWidth =
+      this.canvas.width - marginLeft - marginRight - axisLeftMargin;
+    const availableHeight =
+      this.canvas.height - marginTop - marginBottom - axisBottomMargin;
+
+    this.columnWidth = Math.max(20, (availableWidth * 0.8) / this.columnCount);
+    this.columnGap = (availableWidth * 0.2) / (this.columnCount - 1);
     this.columnHeight = availableHeight;
+    
+    // Store chart area bounds
+    this.chartLeft = marginLeft + axisLeftMargin;
+    this.chartTop = marginTop;
+    this.chartWidth = availableWidth;
+    this.chartHeight = availableHeight;
   }
 
   /**
@@ -123,26 +132,25 @@ export class RaceColumns {
       return;
     }
 
-    const marginTop = parseFloat(this.config?.raceColumn?.marginTop) || 0;
-    const marginBottom = parseFloat(this.config?.raceColumn?.marginBottom) || 0;
-    const marginLeft = parseFloat(this.config?.raceColumn?.marginLeft) || 0;
-    const marginRight = parseFloat(this.config?.raceColumn?.marginRight) || 0;
-
-    const availableWidth = this.canvas.width - marginLeft - marginRight;
-    const columnSpacing = availableWidth / this.columnCount;
+    // Use chart area bounds for proper positioning
+    const columnSpacing = this.chartWidth / this.columnCount;
 
     // Draw columns
     frame.idata.slice(0, this.columnCount).forEach((d, i) => {
-      const x = marginLeft + (i * columnSpacing) + (columnSpacing - this.columnWidth) / 2;
-      const y = yScale(d.frameValue);
+      const x = this.chartLeft + (i * columnSpacing) + (columnSpacing - this.columnWidth) / 2;
+      const baselineY = yScale(0);
+      const valueY = yScale(d.frameValue);
       const width = this.columnWidth;
-      const height = yScale(0) - yScale(d.frameValue);
+      
+      // Ensure bars don't extend below the baseline
+      const y = Math.min(valueY, baselineY);
+      const height = Math.abs(baselineY - valueY);
 
       // Draw column
       this.ctx.fillStyle = d.element.color || this.getColumnColor(i);
       this.ctx.fillRect(x, y, width, height);
 
-      // Draw label
+      // Draw label (below x-axis)
       this.ctx.font = this.columnLabelFont;
       this.ctx.fillStyle = this.columnLabelColor;
       this.ctx.textAlign = 'center';
@@ -150,10 +158,10 @@ export class RaceColumns {
       this.ctx.fillText(
         d.element[this.config?.raceColumn?.labelField || 'name'],
         x + width / 2,
-        yScale(0) + 5
+        baselineY + 5
       );
 
-      // Draw value
+      // Draw value (above column)
       this.ctx.font = this.columnValueFont;
       this.ctx.fillStyle = this.columnValueColor;
       this.ctx.textAlign = 'center';

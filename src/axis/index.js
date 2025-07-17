@@ -23,17 +23,13 @@ export class Axis {
   }
 
   draw(dataFrame) {
-    const marginTop =
-      this._marginTop +
-      (parseFloat(this.config.raceColumn.yAxis.topPadding) * this.height) / 100;
-    const marginLeft = this._marginLeft;
-    const marginBottom = this._marginBottom + this.height * 0.1;
-    const marginRight = this._marginRight + 0;
+    const marginTop = parseFloat(this.config?.raceColumn?.marginTop) || 0;
+    const marginBottom = parseFloat(this.config?.raceColumn?.marginBottom) || 0;
+    const marginLeft = parseFloat(this.config?.raceColumn?.marginLeft) || 0;
+    const marginRight = parseFloat(this.config?.raceColumn?.marginRight) || 0;
 
-    const maxTextWidth = 50;
-    const axisLeftMargin =
-      maxTextWidth + parseFloat(this.config.raceColumn.yAxis.labelsPadding);
-    const axisBottomMargin = 0;
+    const axisLeftMargin = 60; // Space for y-axis labels
+    const axisBottomMargin = 30; // Space for x-axis labels
 
     // Validate yAxis config
     if (!dataFrame.axisConfig?.yAxis || 
@@ -50,67 +46,64 @@ export class Axis {
       return { xScale: null, yScale: null };
     }
 
+    // Calculate chart area
+    const chartLeft = marginLeft + axisLeftMargin;
+    const chartTop = marginTop;
+    const chartWidth = this.width - marginLeft - marginRight - axisLeftMargin;
+    const chartHeight = this.height - marginTop - marginBottom - axisBottomMargin;
+
     const yScale = scaleLinear()
       .domain([dataFrame.axisConfig.yAxis.min, dataFrame.axisConfig.yAxis.max])
-      .range([this.height - axisBottomMargin - marginBottom, marginTop]);
+      .range([chartTop + chartHeight, chartTop]);
 
     const xScale = scaleLinear()
       .domain([0, columnCount])
-      .range([axisLeftMargin + marginLeft, this.width - marginRight]);
+      .range([chartLeft, chartLeft + chartWidth]);
 
     const ctx = this.canvas.getContext('2d');
     
     // Draw y-axis line if enabled
     if (this.config?.raceColumn?.yAxis?.axisLine) {
       ctx.beginPath();
-      ctx.moveTo(xScale(0), yScale(yScale.domain()[0]));
-      ctx.lineTo(xScale(0), yScale(yScale.domain()[1]));
-      ctx.strokeStyle = this.config?.raceColumn?.yAxis?.axisLinesColor;
-      ctx.lineWidth = parseFloat(this.config?.raceColumn?.yAxis?.axisLineWidth);
+      ctx.moveTo(chartLeft, chartTop);
+      ctx.lineTo(chartLeft, chartTop + chartHeight);
+      ctx.strokeStyle = this.config?.raceColumn?.yAxis?.axisLinesColor || '#999';
+      ctx.lineWidth = parseFloat(this.config?.raceColumn?.yAxis?.axisLineWidth) || 1;
       ctx.stroke();
     }
 
-    // Draw x-axis line if enabled
-    if (this.config?.raceColumn?.xAxis?.axisLine) {
-      ctx.beginPath();
-      ctx.moveTo(xScale(0), yScale(yScale.domain()[0]));
-      ctx.lineTo(xScale(xScale.domain()[1]), yScale(yScale.domain()[0]));
-      ctx.strokeStyle = this.config?.raceColumn?.xAxis?.axisLinesColor;
-      ctx.lineWidth = parseFloat(this.config?.raceColumn?.xAxis?.axisLineWidth);
-      ctx.stroke();
-    }
+    // Draw x-axis line (always draw for proper chart structure)
+    ctx.beginPath();
+    ctx.moveTo(chartLeft, chartTop + chartHeight);
+    ctx.lineTo(chartLeft + chartWidth, chartTop + chartHeight);
+    ctx.strokeStyle = this.config?.raceColumn?.yAxis?.axisLinesColor || '#999';
+    ctx.lineWidth = parseFloat(this.config?.raceColumn?.yAxis?.axisLineWidth) || 1;
+    ctx.stroke();
 
     // Draw y-axis labels and ticks if enabled
     if (this.config.raceColumn.yAxis.showLabels) {
       dataFrame.axisConfig.yAxis.yAxisTicks.forEach((tick) => {
-        ctx.font = '18px serif';
+        ctx.font = '12px Arial';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = this.config.raceColumn.yAxis.labelsColor;
-        ctx.fillText(tick.value, maxTextWidth + marginLeft, yScale(tick.value));
+        ctx.fillText(tick.value, chartLeft - 5, yScale(tick.value));
 
         if (this.config.raceColumn.yAxis.tickLineShow) {
           ctx.beginPath();
-          ctx.moveTo(xScale(0), yScale(tick.value));
-          ctx.lineTo(
-            xScale(0) + this.config.raceColumn.yAxis.tickLineSize,
-            yScale(tick.value)
-          );
-          ctx.strokeStyle = this.config.raceColumn.yAxis.tickLineColor;
-          ctx.lineWidth = parseFloat(
-            this.config?.raceColumn?.yAxis?.tickLineStrokeWidth
-          );
+          ctx.moveTo(chartLeft - 3, yScale(tick.value));
+          ctx.lineTo(chartLeft, yScale(tick.value));
+          ctx.strokeStyle = this.config.raceColumn.yAxis.tickLineColor || '#999';
+          ctx.lineWidth = parseFloat(this.config?.raceColumn?.yAxis?.tickLineStrokeWidth) || 1;
           ctx.stroke();
         }
 
         if (this.config?.raceColumn?.yAxis?.gridLines) {
           ctx.beginPath();
-          ctx.moveTo(xScale(0), yScale(tick.value));
-          ctx.lineTo(xScale(xScale.domain()[1]), yScale(tick.value));
-          ctx.strokeStyle = this.config?.raceColumn?.yAxis?.gridLinesColor;
-          ctx.lineWidth = parseFloat(
-            this.config?.raceColumn?.yAxis?.gridLinesWidth
-          );
+          ctx.moveTo(chartLeft, yScale(tick.value));
+          ctx.lineTo(chartLeft + chartWidth, yScale(tick.value));
+          ctx.strokeStyle = this.config?.raceColumn?.yAxis?.gridLinesColor || '#eee';
+          ctx.lineWidth = parseFloat(this.config?.raceColumn?.yAxis?.gridLinesWidth) || 1;
           ctx.stroke();
         }
       });
