@@ -8,6 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "esbuild src/index.js --format=esm --platform=browser --bundle --outdir=dist",
+    "start": "npm run build && serve -l 3000",
     "version:patch": "npm version patch",
     "version:minor": "npm version minor",
     "version:major": "npm version major",
@@ -36,6 +37,7 @@
     "types"
   ],
   "devDependencies": {
-    "esbuild": "0.23.1"
+    "esbuild": "0.23.1",
+    "serve": "^14.2.0"
   }
 }

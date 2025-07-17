@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Columns Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #chart { width: 800px; height: 500px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Race Columns Demo</h1>
+    <canvas id="chart" width="800" height="500"></canvas>
+
+    <script type="module">
+        import { RaceColumns } from '../dist/index.js';
+
+        // Hardcoded data
+        const data = [
+            { name: 'Category 1', value: 100, color: '#4e79a7' },
+            { name: 'Category 2', value: 200, color: '#f28e2b' },
+            { name: 'Category 3', value: 150, color: '#e15759' },
+            { name: 'Category 4', value: 250, color: '#76b7b2' },
+            { name: 'Category 5', value: 300, color: '#59a14f' }
+        ];
+
+        const canvas = document.getElementById('chart');
+        const chart = new RaceColumns(canvas, {
+            raceColumn: {
+                frames: 100,
+                sort: true,
+                columnCount: 5,
+                marginTop: 20,
+                marginBottom: 30,
+                marginLeft: 50,
+                marginRight: 20,
+                yAxis: {
+                    showLabels: true,
+                    labelsColor: '#333',
+                    axisLine: true,
+                    axisLinesColor: '#999',
+                    axisLineWidth: 1,
+                    gridLines: true,
+                    gridLinesColor: '#eee',
+                    gridLinesWidth: 1,
+                    topPadding: 0,
+                    labelsPadding: 10,
+                    tickLineShow: false,
+                    tickLineSize: 5,
+                    tickLineColor: '#999',
+                    tickLineStrokeWidth: 1,
+                    labelsSamplingType: 'auto',
+                    labelsSamplingInterval: 5,
+                    scaleType: 'auto'
+                }
+            }
+        });
+        chart.init(data, ['value']);
+        chart.draw();
+    </script>
+</body>
+</html>

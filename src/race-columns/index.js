@@ -1,6 +1,9 @@
 /**
  * Main RaceColumns visualization class that manages the animation and rendering
  */
+import { Axis } from '../axis';
+import { DataFrame } from '../data-frame';
+
 export class RaceColumns {
   constructor(canvas, config) {
     this.canvas = canvas;
@@ -113,46 +116,52 @@ export class RaceColumns {
     if (!frame) return;
 
     const { xScale, yScale } = this.axis.draw(frame);
+    
+    // Check if scales are valid
+    if (!xScale || !yScale) {
+      console.error('Invalid scales returned from axis');
+      return;
+    }
+
+    const marginTop = parseFloat(this.config?.raceColumn?.marginTop) || 0;
+    const marginBottom = parseFloat(this.config?.raceColumn?.marginBottom) || 0;
+    const marginLeft = parseFloat(this.config?.raceColumn?.marginLeft) || 0;
+    const marginRight = parseFloat(this.config?.raceColumn?.marginRight) || 0;
+
+    const availableWidth = this.canvas.width - marginLeft - marginRight;
+    const columnSpacing = availableWidth / this.columnCount;
 
     // Draw columns
     frame.idata.slice(0, this.columnCount).forEach((d, i) => {
-      const x = xScale(i);
-      const y = yScale(0);
+      const x = marginLeft + (i * columnSpacing) + (columnSpacing - this.columnWidth) / 2;
+      const y = yScale(d.frameValue);
       const width = this.columnWidth;
-      const height = yScale(d.frameValue) - yScale(0);
+      const height = yScale(0) - yScale(d.frameValue);
 
       // Draw column
-      this.ctx.fillStyle = this.getColumnColor(i);
-      this.ctx.beginPath();
-      this.ctx.roundRect(
-        x,
-        y,
-        width,
-        height,
-        this.columnRoundness
-      );
-      this.ctx.fill();
+      this.ctx.fillStyle = d.element.color || this.getColumnColor(i);
+      this.ctx.fillRect(x, y, width, height);
 
       // Draw label
       this.ctx.font = this.columnLabelFont;
       this.ctx.fillStyle = this.columnLabelColor;
-      this.ctx.textAlign = this.columnLabelAlign;
-      this.ctx.textBaseline = this.columnLabelBaseline;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'top';
       this.ctx.fillText(
         d.element[this.config?.raceColumn?.labelField || 'name'],
-        x + this.columnLabelOffsetX,
-        y + this.columnLabelOffsetY
+        x + width / 2,
+        yScale(0) + 5
       );
 
       // Draw value
       this.ctx.font = this.columnValueFont;
       this.ctx.fillStyle = this.columnValueColor;
-      this.ctx.textAlign = this.columnValueAlign;
-      this.ctx.textBaseline = this.columnValueBaseline;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'bottom';
       this.ctx.fillText(
-        d.frameValue.toFixed(2),
-        x + width - this.columnValueOffsetX,
-        y + this.columnValueOffsetY
+        d.frameValue.toFixed(0),
+        x + width / 2,
+        y - 5
       );
     });
   }

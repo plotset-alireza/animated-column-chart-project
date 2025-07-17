@@ -1,3 +1,5 @@
+import { ticks } from 'd3-array';
+import { scaleLinear } from 'd3-scale';
 /**
  * Handles axis calculations and rendering for RaceColumns visualization
  */
@@ -33,12 +35,27 @@ export class Axis {
       maxTextWidth + parseFloat(this.config.raceColumn.yAxis.labelsPadding);
     const axisBottomMargin = 0;
 
-    const yScale = new linear2()
+    // Validate yAxis config
+    if (!dataFrame.axisConfig?.yAxis || 
+        typeof dataFrame.axisConfig.yAxis.min !== 'number' || 
+        typeof dataFrame.axisConfig.yAxis.max !== 'number') {
+      console.error('Invalid yAxis configuration in dataFrame');
+      return { xScale: null, yScale: null };
+    }
+
+    // Validate xAxis config
+    const columnCount = parseInt(this.config?.raceColumn?.columnCount || '0');
+    if (isNaN(columnCount) || columnCount <= 0) {
+      console.error('Invalid columnCount in config');
+      return { xScale: null, yScale: null };
+    }
+
+    const yScale = scaleLinear()
       .domain([dataFrame.axisConfig.yAxis.min, dataFrame.axisConfig.yAxis.max])
       .range([this.height - axisBottomMargin - marginBottom, marginTop]);
 
-    const xScale = new linear2()
-      .domain([0, parseInt(this.config?.raceColumn?.columnCount)])
+    const xScale = scaleLinear()
+      .domain([0, columnCount])
       .range([axisLeftMargin + marginLeft, this.width - marginRight]);
 
     const ctx = this.canvas.getContext('2d');
